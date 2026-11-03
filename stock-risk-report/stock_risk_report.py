@@ -8,7 +8,7 @@ data = yf.download(tickers, start='2000-01-01', end='2026-01-01', auto_adjust=Tr
 returns = data.pct_change().dropna()
 
 if returns.empty:
-    raise SystemExit("Value is missing.")
+    raise SystemExit("No data available, try again later...")
 
 daily_vol = returns.std()
 volatility = returns.std() * np.sqrt(252)
@@ -39,8 +39,17 @@ peak = price.cummax()
 below_peak = (price / peak) - 1
 max_dd = below_peak.min()
 
-print(pd.DataFrame({"Parametric": var99, "Historical": hist_var, "Sharpe": sharpe, "Breach Rate": breach_rate, "Ann. Return": cagr, "Max DD.": max_dd, "DD Date": below_peak.idxmin()}))
+report = pd.DataFrame({
+    "1-Day VaR 99% (Parametric)": var99.map("${:,.0f}".format),
+    "1-Day VaR 99% (Historical)": hist_var.map("${:,.0f}".format),
+    "VaR Breach Rate (Expected 1%)": breach_rate.map("{:.2f}%".format),
+    "Sharpe Ratio": sharpe.map("{:.2f}".format),
+    "Annualized Return (CAGR)": cagr.map("{:.1%}".format),
+    "Max Drawdown": max_dd.map("{:.1%}".format),
+    "Max Drawdown Date": below_peak.idxmin().dt.date,
+})
 
+print(report.T)
 
 
 
